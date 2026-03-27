@@ -31,10 +31,10 @@ class HaFlexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 selector.EntitySelectorConfig(domain=["input_number", "sensor"])
             ),
             vol.Required(CONF_P_L, default=DEFAULT_P_L): selector.NumberSelector(
-                selector.NumberSelectorConfig(min=-10, max=-0.01, step=0.01, mode=selector.NumberSelectorMode.BOX)
+                selector.NumberSelectorConfig(min=-1e6, max=0, step=0.01, mode=selector.NumberSelectorMode.BOX)
             ),
             vol.Required(CONF_P_H, default=DEFAULT_P_H): selector.NumberSelector(
-                selector.NumberSelectorConfig(min=-9.99, max=-0.001, step=0.01, mode=selector.NumberSelectorMode.BOX)
+                selector.NumberSelectorConfig(min=-1e6, max=0, step=0.01, mode=selector.NumberSelectorMode.BOX)
             ),
         })
 
