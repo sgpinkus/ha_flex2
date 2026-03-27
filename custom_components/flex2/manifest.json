@@ -2,7 +2,7 @@
   "domain": "flex2",
   "name": "Flex2",
   "version": "0.1.0",
-  "documentation": "https://github.com/sgpinkus/ha_flex2",
+  "documentation": "https://github.com/sgpinkus/flex22",
   "dependencies": [
     "frontend",
     "http"

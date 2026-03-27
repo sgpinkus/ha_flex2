@@ -1,4 +1,4 @@
-"""Config flow for ha_flex."""
+"""Config flow for flex2."""
 from __future__ import annotations
 
 import voluptuous as vol

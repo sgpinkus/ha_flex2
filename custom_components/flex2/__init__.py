@@ -1,4 +1,4 @@
-"""ha_flex — demand-response integration."""
+"""flex2 — demand-response integration."""
 from __future__ import annotations
 
 import logging
@@ -23,7 +23,7 @@ _CARD_URL = f"{_URL_BASE}/flex2-card.js"
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register static path and schedule Lovelace resource registration."""
 
-    # Serve www/ at /ha_flex/
+    # Serve www/ at /flex2/
     try:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(_URL_BASE, str(_WWW_DIR), cache_headers=False)]
@@ -40,7 +40,7 @@ async def _register_lovelace_resource(hass: HomeAssistant) -> None:
         lovelace = hass.data.get("lovelace")
         if lovelace is None or lovelace.mode != "storage":
             _LOGGER.debug(
-                "ha_flex: Lovelace not in storage mode — add resource manually: "
+                "flex2: Lovelace not in storage mode — add resource manually: "
                 "URL=%s  Type=JavaScript module", _CARD_URL
             )
             return
@@ -64,7 +64,7 @@ async def _register_lovelace_resource(hass: HomeAssistant) -> None:
             await resources.async_create_item(
                 {"res_type": "module", "url": versioned_url}
             )
-            _LOGGER.info("ha_flex: registered Lovelace resource %s", versioned_url)
+            _LOGGER.info("flex2: registered Lovelace resource %s", versioned_url)
         else:
             # Update URL if version changed
             resource = existing[0]
@@ -73,11 +73,11 @@ async def _register_lovelace_resource(hass: HomeAssistant) -> None:
                     resource["id"],
                     {"res_type": "module", "url": versioned_url},
                 )
-                _LOGGER.info("ha_flex: updated Lovelace resource to %s", versioned_url)
+                _LOGGER.info("flex2: updated Lovelace resource to %s", versioned_url)
 
     except Exception as exc:  # noqa: BLE001
         _LOGGER.warning(
-            "ha_flex: could not auto-register Lovelace resource (%s). "
+            "flex2: could not auto-register Lovelace resource (%s). "
             "Add manually: URL=%s  Type=JavaScript module", exc, _CARD_URL
         )
 

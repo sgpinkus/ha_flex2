@@ -49,7 +49,7 @@ class FlexCoordinator:
         try:
             return float(state.state)
         except ValueError:
-            _LOGGER.warning("ha_flex: cannot parse λ from %s: %s",
+            _LOGGER.warning("flex2: cannot parse λ from %s: %s",
                             self._price_entity, state.state)
             return None
 
@@ -58,7 +58,7 @@ class FlexCoordinator:
         if lam is None:
             return
         self.data = solve(lam, self._cost_fn)
-        _LOGGER.debug("ha_flex: λ=%.4f  regime=%s  r*=%.3f",
+        _LOGGER.debug("flex2: λ=%.4f  regime=%s  r*=%.3f",
                       lam, self.data["regime"], self.data["r_opt"])
         async_dispatcher_send(self.hass, SIGNAL_UPDATE, self.entry.entry_id)
 
