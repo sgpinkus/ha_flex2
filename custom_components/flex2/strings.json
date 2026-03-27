@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up HA Flex",
+        "data": {
+          "price_entity": "Price signal entity (λ)",
+          "p_l": "p_l — cost derivative at r=0",
+          "p_h": "p_h — cost derivative at r=1"
+        }
+      }
+    },
+    "error": {
+      "p_h_must_exceed_p_l": "p_h must be greater than p_l.",
+      "load_device_requires_negative_params": "Load device convention requires p_l < p_h < 0."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Flex options",
+        "data": {
+          "p_l": "p_l — cost derivative at r=0",
+          "p_h": "p_h — cost derivative at r=1"
+        }
+      }
+    },
+    "error": {
+      "p_h_must_exceed_p_l": "p_h must be greater than p_l."
+    }
+  }
+}

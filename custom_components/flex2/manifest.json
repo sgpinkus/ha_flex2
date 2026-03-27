@@ -1,0 +1,13 @@
+{
+  "domain": "flex2",
+  "name": "Flex2",
+  "version": "0.1.0",
+  "documentation": "https://github.com/sgpinkus/ha_flex2",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [
+    "numpy>=1.24.0"
+  ],
+  "iot_class": "local_push",
+  "config_flow": true
+}
