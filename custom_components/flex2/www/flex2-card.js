@@ -23,12 +23,17 @@ class Flex2Card extends HTMLElement {
 
     set hass(hass) {
         this._hass = hass;
-        if (!this._config?.entity) return;
+        if (!this._config?.entity) {
+            if (this._st) this._st.innerHTML = `<span style="color:var(--secondary-text-color);font-size:12px">Configure entity in card editor</span>`;
+            return;
+        }
         const s = hass.states[this._config.entity];
         if (s) this._render(s.attributes);
     }
 
     getCardSize() { return 4; }
+
+    static getConfigElement() { return document.createElement("flex2-card-editor"); }
 
     static getStubConfig() {
         return { entity: "sensor.flex2_r_opt" };
@@ -194,3 +199,72 @@ window.customCards.push({
     name: "Flex2 card",
     description: "Demand-response curve with current operating point",
 });
+
+
+class Flex2CardEditor extends HTMLElement {
+
+    setConfig(config) {
+        this._config = config;
+        if (!this.shadowRoot) {
+            this.attachShadow({ mode: "open" });
+        }
+        this._render();
+    }
+
+    set hass(hass) {
+        this._hass = hass;
+        this._render();
+    }
+
+    _render() {
+        if (!this._hass) return;
+
+        const entity = this._config?.entity || "";
+        const title = this._config?.title || "";
+
+        this.shadowRoot.innerHTML = `
+      <style>
+        .row {
+          display: flex; flex-direction: column;
+          gap: 4px; margin-bottom: 16px;
+          font-family: var(--primary-font-family, sans-serif);
+        }
+        label { font-size: 12px; color: var(--secondary-text-color); }
+        ha-entity-picker, ha-textfield { width: 100%; }
+      </style>
+      <div class="row">
+        <label>Entity (flex2 r_opt sensor)</label>
+        <ha-entity-picker
+          .hass=${this._hass}
+          .value="${entity}"
+          .includeDomains=${["sensor"]}
+          allow-custom-entity
+        ></ha-entity-picker>
+      </div>
+      <div class="row">
+        <label>Title (optional)</label>
+        <ha-textfield
+          .value="${title}"
+          placeholder="Flex2"
+        ></ha-textfield>
+      </div>`;
+
+        this.shadowRoot.querySelector("ha-entity-picker")
+            .addEventListener("value-changed", e => {
+                this._config = { ...this._config, entity: e.detail.value };
+                this.dispatchEvent(new CustomEvent("config-changed",
+                    { detail: { config: this._config }, bubbles: true, composed: true }
+                ));
+            });
+
+        this.shadowRoot.querySelector("ha-textfield")
+            .addEventListener("change", e => {
+                this._config = { ...this._config, title: e.target.value };
+                this.dispatchEvent(new CustomEvent("config-changed",
+                    { detail: { config: this._config }, bubbles: true, composed: true }
+                ));
+            });
+    }
+}
+
+customElements.define("flex2-card-editor", Flex2CardEditor);

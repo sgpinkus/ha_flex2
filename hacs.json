@@ -1,0 +1,6 @@
+{
+  "name": "Flex 2",
+  "homeassistant": "2026.2.3",
+  "hacs": "2.0.5",
+  "content_in_root": false
+}
