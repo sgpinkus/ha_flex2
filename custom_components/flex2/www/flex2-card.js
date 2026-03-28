@@ -1,71 +1,64 @@
 /**
  * flex2-card.js
  *
- * Manual resource registration:
- *   Settings → Dashboards → Resources → Add
- *   URL:  /local/flex2/flex2-card.js   (if served via www/ symlink)
- *   Type: JavaScript module
- *
  * Card YAML:
  *   type: custom:flex2-card
  *   entity: sensor.flex2_r_opt
- *   title: Flex2                          # optional
+ *   title: Flex2                 # optional
  */
 
-class HaFlexCard extends HTMLElement {
+class Flex2Card extends HTMLElement {
 
     setConfig(config) {
-        if (!config.entity) throw new Error("flex2-card: 'entity' is required");
         this._config = config;
         if (!this.shadowRoot) {
             this.attachShadow({ mode: "open" });
             this._build();
+        } else {
+            // Update title if config changes
+            const t = this.shadowRoot.querySelector(".title");
+            if (t) t.textContent = config.title || "Flex2";
         }
     }
 
     set hass(hass) {
         this._hass = hass;
+        if (!this._config?.entity) return;
         const s = hass.states[this._config.entity];
         if (s) this._render(s.attributes);
     }
 
     getCardSize() { return 4; }
 
+    static getStubConfig() {
+        return { entity: "sensor.flex2_r_opt" };
+    }
+
     _build() {
         this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; font-family: var(--primary-font-family, sans-serif); }
         ha-card { padding: 16px; }
-        .title {
-          font-size: 14px; font-weight: 500;
-          color: var(--primary-text-color); margin-bottom: 12px;
-        }
+        .title { font-size: 14px; font-weight: 500; color: var(--primary-text-color); margin-bottom: 12px; }
         canvas { width: 100%; height: 240px; display: block; }
-        .legend {
-          display: flex; gap: 16px; margin-top: 8px;
-          font-size: 11px; color: var(--secondary-text-color); flex-wrap: wrap;
-        }
+        .legend { display: flex; gap: 16px; margin-top: 8px; font-size: 11px; color: var(--secondary-text-color); flex-wrap: wrap; }
         .li { display: flex; align-items: center; gap: 5px; }
         .sw { height: 2px; width: 18px; border-radius: 1px; }
-        .stats {
-          display: flex; gap: 14px; flex-wrap: wrap;
-          margin-top: 10px; font-size: 12px; color: var(--secondary-text-color);
-        }
+        .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--secondary-text-color); }
         .stats strong { color: var(--primary-text-color); font-weight: 500; }
-        .badge {
-          font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
-        }
+        .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
         .interior { background: var(--success-color, #4caf50); color: #fff; }
         .at_min   { background: var(--warning-color, #ff9800); color: #fff; }
         .at_max   { background: var(--info-color,    #2196f3); color: #fff; }
+        .unconfigured { padding: 16px; font-size: 13px; color: var(--secondary-text-color); }
       </style>
       <ha-card>
-        <div class="title">${this._config.title || "Flex2"}</div>
+        <div class="title">${this._config?.title || "Flex2"}</div>
         <canvas id="c"></canvas>
         <div class="legend">
           <div class="li"><div class="sw" style="background:#7F77DD"></div>total obj</div>
-          <div class="li"><div class="sw" style="background:#BA7517;border-style:dashed;border-width:1px 0 0;height:0;border-color:#BA7517"></div>cost(r)</div>
-          <div class="li"><div class="sw" style="background:#378ADD;border-style:dashed;border-width:1px 0 0;height:0;border-color:#378ADD"></div>λ·r</div>
+          <div class="li"><div class="sw" style="background:#BA7517"></div>cost(r)</div>
+          <div class="li"><div class="sw" style="background:#378ADD"></div>λ·r</div>
           <div class="li"><div style="width:1px;height:12px;background:#1D9E75"></div>r*</div>
         </div>
         <div class="stats" id="st"></div>
@@ -102,7 +95,6 @@ class HaFlexCard extends HTMLElement {
         const cW = W - PAD.l - PAD.r;
         const cH = H - PAD.t - PAD.b;
 
-        // y scale: fit all three curves with a little breathing room
         const allY = [...total, ...cost, ...energy];
         const yMin = Math.min(...allY);
         const yMax = Math.max(...allY);
@@ -124,7 +116,7 @@ class HaFlexCard extends HTMLElement {
         }
         ctx.setLineDash([]);
 
-        // zero line (only if range spans zero)
+        // zero line
         if (yLo < 0 && yHi > 0) {
             const zy = cy(0);
             ctx.beginPath(); ctx.strokeStyle = div; ctx.lineWidth = 1;
@@ -154,17 +146,14 @@ class HaFlexCard extends HTMLElement {
         ctx.moveTo(ox, PAD.t); ctx.lineTo(ox, PAD.t + cH);
         ctx.stroke(); ctx.setLineDash([]);
 
-        // dot on total curve at r*
-        const oi = Math.min(
-            Math.round(r_opt * (xs.length - 1)),
-            xs.length - 1
-        );
+        // dot on total curve
+        const oi = Math.min(Math.round(r_opt * (xs.length - 1)), xs.length - 1);
         const oy = cy(total[oi]);
         ctx.beginPath(); ctx.arc(ox, oy, 5, 0, Math.PI * 2);
         ctx.fillStyle = "#1D9E75"; ctx.fill();
         ctx.strokeStyle = bg; ctx.lineWidth = 2; ctx.stroke();
 
-        // r* label — flip side if too close to right edge
+        // r* label
         ctx.font = `500 11px ${ff}`;
         ctx.fillStyle = "#1D9E75";
         const labelX = (ox + 60 > PAD.l + cW) ? ox - 6 : ox + 6;
@@ -176,23 +165,18 @@ class HaFlexCard extends HTMLElement {
         ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t); ctx.lineTo(PAD.l, PAD.t + cH); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t + cH); ctx.lineTo(PAD.l + cW, PAD.t + cH); ctx.stroke();
 
-        // y-axis tick labels
         ctx.fillStyle = fg2; ctx.font = `11px ${ff}`; ctx.textAlign = "right";
         for (let i = 0; i <= 4; i++) {
             const v = yLo + yR * (1 - i / 4);
             ctx.fillText(v.toFixed(2), PAD.l - 4, PAD.t + cH * i / 4 + 4);
         }
 
-        // x-axis tick labels
         ctx.textAlign = "center";
         [0, 0.25, 0.5, 0.75, 1.0].forEach(v => {
             ctx.fillText(`${(v * 100).toFixed(0)}%`, cx(v), PAD.t + cH + 16);
         });
-        // x-axis title
-        ctx.fillStyle = fg2; ctx.font = `11px ${ff}`; ctx.textAlign = "center";
         ctx.fillText("r (consumption)", PAD.l + cW / 2, PAD.t + cH + 30);
 
-        // stats bar
         const regimeLabel = { interior: "interior", at_min: "at min", at_max: "at max" }[regime] || regime;
         this._st.innerHTML =
             `<span class="badge ${regime}">${regimeLabel}</span>` +
@@ -203,7 +187,7 @@ class HaFlexCard extends HTMLElement {
     }
 }
 
-customElements.define("flex2-card", HaFlexCard);
+customElements.define("flex2-card", Flex2Card);
 window.customCards = window.customCards || [];
 window.customCards.push({
     type: "flex2-card",
