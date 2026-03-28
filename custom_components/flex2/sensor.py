@@ -35,7 +35,7 @@ class FlexOutputSensor(SensorEntity):
     def __init__(self, coordinator: FlexCoordinator, entry: ConfigEntry) -> None:
         self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_r_opt"
-        self._attr_name = "HA Flex r_opt"
+        self._attr_name = "Flex2 r_opt"
 
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(

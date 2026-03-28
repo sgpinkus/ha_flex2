@@ -9,6 +9,8 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
+from homeassistant.components.lovelace import LovelaceData
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
 
 from .const import DOMAIN, INTEGRATION_VERSION
 from .coordinator import FlexCoordinator
@@ -21,38 +23,25 @@ _CARD_URL = f"{_URL_BASE}/flex2-card.js"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register static path and schedule Lovelace resource registration."""
-
-    # Serve www/ at /flex2/
+    """Register static path and schedule Lovelace resource registration.
+    Add/update the card JS as a Lovelace resource (storage mode only)."""
     try:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(_URL_BASE, str(_WWW_DIR), cache_headers=False)]
         )
     except RuntimeError:
         pass  # already registered on reload
-    await _register_lovelace_resource(hass)
-    return True
-
-
-async def _register_lovelace_resource(hass: HomeAssistant) -> None:
-    """Add/update the card JS as a Lovelace resource (storage mode only)."""
     try:
-        lovelace = hass.data.get("lovelace")
-        if lovelace is None or lovelace.mode != "storage":
-            _LOGGER.debug(
-                "flex2: Lovelace not in storage mode — add resource manually: "
-                "URL=%s  Type=JavaScript module", _CARD_URL
-            )
-            return
+        lovelace: LovelaceData | None = hass.data.get("lovelace")
+        if lovelace is None:
+            raise Exception('LovelaceData instance not found')
+        if lovelace.resource_mode != "storage":
+            raise Exception('Lovelace not in storage mode')
+        if not isinstance(lovelace.resources, ResourceStorageCollection): # Should be redundant.
+            raise Exception('Lovelace not in storage mode')
 
-        resources = lovelace.resources
-
-        # Wait for resources collection to be loaded
-        if not resources.loaded:
-            async def _retry(_now: Any) -> None:
-                await _register_lovelace_resource(hass)
-            async_call_later(hass, 5, _retry)
-            return
+        resources: ResourceStorageCollection = lovelace.resources
+        await resources.async_get_info() # Forces loading.
 
         versioned_url = f"{_CARD_URL}?v={INTEGRATION_VERSION}"
         existing = [
@@ -80,6 +69,7 @@ async def _register_lovelace_resource(hass: HomeAssistant) -> None:
             "flex2: could not auto-register Lovelace resource (%s). "
             "Add manually: URL=%s  Type=JavaScript module", exc, _CARD_URL
         )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up HA Flex",
+        "title": "Set up Flex2",
         "data": {
           "price_entity": "Price signal entity (λ)",
           "p_l": "p_l — cost derivative at r=0",
@@ -18,7 +18,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "HA Flex options",
+        "title": "Flex2 options",
         "data": {
           "p_l": "p_l — cost derivative at r=0",
           "p_h": "p_h — cost derivative at r=1"
