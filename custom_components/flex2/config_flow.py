@@ -9,7 +9,7 @@ from homeassistant.helpers import selector
 from .const import DOMAIN, CONF_P_L, CONF_P_H, CONF_PRICE_ENTITY, DEFAULT_P_L, DEFAULT_P_H
 
 
-class HaFlexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Flex2ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 

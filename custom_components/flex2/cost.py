@@ -18,11 +18,11 @@ class HLQuadraticCost:
     Load-device convention: p_l < p_h < 0.
     """
 
-    def __init__(self, p_l: float, p_h: float) -> None:
+    def __init__(self, p_l: float, p_h: float, x_l = 0.0, x_h = 1.0) -> None:
         self.p_l = p_l
         self.p_h = p_h
-        self.x_l = 0.0
-        self.x_h = 1.0
+        self.x_l = x_l
+        self.x_h = x_h
         self._cost_fn = lambda x: np.vectorize(
             HLQuadraticCost._cost, otypes=[float]
         )(x, self.p_l, self.p_h, self.x_l, self.x_h)
@@ -46,22 +46,28 @@ class HLQuadraticCost:
         return self._hess_fn(x)
 
     @staticmethod
-    def _cost(x, p_l, p_h, x_l, x_h):
+    def _cost(x, p_l, p_h, x_l, x_h) -> float:
         if x_l == x_h:
             return 0.0
+        if p_l == p_h:
+            return  p_l * (x - x_l) / (x_h - x_l)
         b = p_l
         a = (p_h - p_l) / 2
         c = a * (-b / (2 * a)) ** 2 + b * (-b / (2 * a))
         return (x_h - x_l) * np.poly1d([a, b, 0])((x - x_l) / (x_h - x_l)) - c * (x_h - x_l)
 
     @staticmethod
-    def _deriv(x, p_l, p_h, x_l, x_h):
+    def _deriv(x, p_l, p_h, x_l, x_h) -> float:
+        if p_l == p_h:
+            return p_l
         if x_l == x_h:
             return 0.0
         return (p_h - p_l) * ((x - x_l) / (x_h - x_l)) + p_l
 
     @staticmethod
-    def _hess(x, p_l, p_h, x_l, x_h):
+    def _hess(x, p_l, p_h, x_l, x_h) -> float:
+        if p_l == p_h:
+            return 0.0
         if x_l == x_h:
             return 0.0
         return (p_h - p_l) / (x_h - x_l)
